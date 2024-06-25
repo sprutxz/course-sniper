@@ -124,5 +124,9 @@ async def create_config(ctx):
 
     # Send confirmation message to user
     await ctx.author.send('Configuration saved successfully.')
+    
+@bot.command()
+async def leroysux(ctx):
+    await ctx.send('No u.')
 
 bot.run(token)

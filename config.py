@@ -101,3 +101,4 @@ def load_desired_classes_from_file(file='class-index.txt'):
         desired_classes.append(line.strip())
         
     return desired_classes
+
