@@ -17,7 +17,7 @@ Enter "-1" when finished.
 '''
 
 @bot.command()
-async def add_section(ctx):
+async def add_multiple_sections(ctx):
     # Get input from the user
     section_indexes = []
     
@@ -37,6 +37,11 @@ async def add_section(ctx):
     with open('class-index.txt', 'w') as f:
         for index in section_indexes:
             f.write(str(index) + '\n')
+            
+@bot.command()
+async def add_section(ctx, arg):
+    with open('class-index.txt', 'a') as f:
+        f.write(arg + '\n')
     
 @bot.command()
 async def remove_section(ctx):
@@ -55,6 +60,22 @@ async def remove_section(ctx):
             f.write(str(index) + '\n')
     
     ctx.author.send('Section removed.')
+
+@bot.command()
+async def purge_sections(ctx):
+    with open('class-index.txt', 'w') as f:
+        f.write('')
+        
+    await ctx.author.send('All sections removed.')
+    
+@bot.command()
+async def show_sections(ctx):
+    desired_classes = config.load_desired_classes_from_file()
+    
+    await ctx.author.send('Your desired sections are:')
+    
+    for index in desired_classes:
+        await ctx.author.send(index)
 
 @bot.command()
 async def create_config(ctx):
@@ -126,7 +147,7 @@ async def create_config(ctx):
     await ctx.author.send('Configuration saved successfully.')
     
 @bot.command()
-async def leroysux(ctx):
+async def leroysucks(ctx):
     await ctx.send('No u.')
 
 bot.run(token)

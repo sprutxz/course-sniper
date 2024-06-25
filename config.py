@@ -1,4 +1,10 @@
-def create_config():
+import discord
+
+intents = discord.Intents.default()
+intents.message_content = True
+client = discord.Client(intents=intents)
+
+async def create_config(message):
     year = input('Enter the year:')
 
     while True:
