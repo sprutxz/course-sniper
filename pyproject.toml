@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "course-sniper"
+version = "0.1.0"
+description = ""
+authors = ["Leroy <leroy.souz@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+requests = "^2.32.3"
+discord = "^2.3.2"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
