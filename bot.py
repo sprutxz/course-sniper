@@ -8,7 +8,8 @@ import asyncio
 with open('token.txt', 'r') as f:
     token = f.read().strip()
     
-USR_ID = 451248085360967681
+with open('user-id.txt', 'r') as f:
+    USR_ID = int(f.read().strip())
 
 intents = discord.Intents.default()
 intents.message_content = True
