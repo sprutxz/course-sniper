@@ -52,7 +52,6 @@ class MyBot(commands.Bot):
         
         tasks = []
         
-        print('adding tasks...')
         for user in user_data['users']:
             
             task = asyncio.create_task(self.check_open_sections_and_notify(user, open_sections))
@@ -69,7 +68,6 @@ class MyBot(commands.Bot):
         user_id = user['usr_id']
         desired_sections = user['desired_sections']
         
-        print(f'Checking for user {user_id}...')
         
         indexes = clsretrieval.check_open_classes(open_sections, desired_sections)
         
