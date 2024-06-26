@@ -10,13 +10,13 @@ Course-Sniper is a discord bot developed in python to snipe courses for Rutgers.
 
 ### Running the Bot
 
+
 #### Setup
 The dependencies managed in `pyproject.toml` can be installed through poetry by using 'poetry install'.
 
 Use a virtual environment to prevent polluting the global environment with necessary packages causing conflicts.
 
 Create a file in the same folder as the `bot.py` file called 'token.txt' containing the bot api token.
-Create a file in the same folder as the `bot.py` file called 'usr-id.txt' containing the user-id of the discord user to send the message to
 
 #### Run
 
