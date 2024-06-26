@@ -11,6 +11,10 @@ def get_open_classes():
     
     params = config_loader.load_config_from_file() # loading the parameters to send to the SOC API
     
+    if params is None:
+        raise Exception("No parameters found in config.txt")
+    
+    
     url = "http://sis.rutgers.edu/soc/api/openSections.gzip" # SOC API URL
     
     count = 0

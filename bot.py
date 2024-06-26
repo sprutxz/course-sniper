@@ -64,7 +64,7 @@ class MyBot(commands.Bot):
                 
                 # Send a message to the user
                 user = await self.fetch_user(USR_ID)
-                await user.send(f'Open Section: {index} \n url: {url}')
+                await user.send(f'Open Section: {index} \nRegistration url: {url}')
                 
                 # Remove the section from the text file
                 desired_sections.remove(index)
