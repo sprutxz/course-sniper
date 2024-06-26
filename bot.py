@@ -129,6 +129,69 @@ class Commands(commands.Cog):
         desired_classes = config_loader.load_desired_classes_from_file()
         await ctx.send(f'Desired Sections: {desired_classes}')
     
+    @commands.command()
+    async def create_config(self,ctx):
+        await ctx.send('Enter the year the semester starts (YYYY):')
+        
+        def check(m):
+            return m.author == ctx.author and m.channel == ctx.channel
+        
+        year = await bot.wait_for('message', check=check)
+        
+        while True:
+            await ctx.send('Enter the semester you are sniping classes for (Winter, Spring, Summer, Fall):')
+            semester = await bot.wait_for('message', check=check)
+            
+            semester = semester.content.lower()
+            if semester == 'winter':
+                semester = '0'
+                break
+            
+            elif semester == 'spring':
+                semester = '1'
+                break
+            
+            elif semester == 'summer':
+                semester = '7'
+                break
+            
+            elif semester == 'fall':
+                semester = '9'
+                break
+            
+            else:
+                await ctx.send('Invalid semester')
+                continue
+        
+        while True:
+            await ctx.send('Enter the campus (New Brunswick, Newark, Camden):')
+            campus = await bot.wait_for('message', check=check)
+            
+            campus = campus.content.lower()
+            
+            if campus == 'new brunswick':
+                campus = 'NB'
+                break
+            
+            elif campus == 'newark':
+                campus = 'NK'
+                break
+            
+            elif campus == 'camden':
+                campus = 'CM'
+                break
+            
+            else:
+                await ctx.send('Invalid campus')
+                continue
+            
+        
+        with open('config.txt', 'w') as f:
+            f.write(f'year:{year.content}\n')
+            f.write(f'term:{semester}\n')
+            f.write(f'campus:{campus}\n')
+            
+        await ctx.send('Config file created')    
 
 # Creating the bot
 bot = MyBot(command_prefix='>', intents=intents)
