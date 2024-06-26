@@ -1,6 +1,6 @@
 import discord
 from discord.ext import commands, tasks
-import config
+import config_loader
 import clsretrieval
 import asyncio
 
@@ -12,8 +12,6 @@ USR_ID = 451248085360967681
 
 intents = discord.Intents.default()
 intents.message_content = True
-
-
 
 class MyBot(commands.Bot):
     def __init__(self, *args, **kwargs):
@@ -31,9 +29,9 @@ class MyBot(commands.Bot):
     async def check_for_new_sections(self):
         print('Checking for new sections...')
         
-        params = config.load_config_from_file()
+        params = config_loader.load_config_from_file()
         semester = params['term'] + params['year']
-        desired_sections = config.load_desired_classes_from_file()
+        desired_sections = config_loader.load_desired_classes_from_file()
         open_sections = clsretrieval.get_open_classes()
         
         indexes = clsretrieval.check_open_classes(open_sections, desired_sections)
@@ -71,7 +69,7 @@ class Commands(commands.Cog):
     
     @commands.command()
     async def remove_section(self, ctx, arg):
-        desired_classes = config.load_desired_classes_from_file()
+        desired_classes = config_loader.load_desired_classes_from_file()
         
         if arg in desired_classes:
             desired_classes.remove(arg)

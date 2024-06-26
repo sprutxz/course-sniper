@@ -1,11 +1,11 @@
 import requests
 import time
 
-import config
+import config_loader
 
 def get_open_classes():
     
-    params = config.load_config_from_file()
+    params = config_loader.load_config_from_file()
     
     url = "http://sis.rutgers.edu/soc/api/openSections.gzip"
     
