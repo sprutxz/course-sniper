@@ -44,6 +44,7 @@ class MyBot(commands.Bot):
     # Open Section checker task that runs every 2 seconds
     @tasks.loop(seconds=2)
     async def check_for_new_sections(self):
+        print('Checking for new sections...')
         
         desired_sections = config_loader.load_desired_classes_from_file() #loading the classes to snipe
         
@@ -86,7 +87,7 @@ class Commands(commands.Cog):
     
     # Add a section to snipe
     @commands.command(name='add',
-                      brief='Usage: >add <section>',
+                      brief='Usage: >add <section>. Use to add a section to the sniping list',
                       description='Add a section to snipe')
     
     async def add_section(self, ctx, arg):
@@ -97,7 +98,7 @@ class Commands(commands.Cog):
     
     # Remove a section to snipe
     @commands.command(name='remove',
-                      brief='Usage: >remove <section>',
+                      brief='Usage: >remove <section>. Use to remove a section from the sniping list',
                       description='Remove a section to snipe')
     async def remove_section(self, ctx, arg):
         desired_classes = config_loader.load_desired_classes_from_file()
@@ -113,7 +114,7 @@ class Commands(commands.Cog):
     
     # Remove all sections to snipe
     @commands.command(name='purge',
-                      brief='Usage: >purge',
+                      brief='Usage: >purge. Use to remove all sections from the sniping list',
                       description='Remove all sections from the sniping list')
     async def purge_sections(self, ctx):
         with open('class-index.txt', 'w'):
@@ -123,13 +124,16 @@ class Commands(commands.Cog):
         
     # List all sections that are being sniped
     @commands.command(name='sniped',
-                      brief='Usage: >sniped',
+                      brief='Usage: >sniped. Use to check all sections that are being sniped',
                       description='List all sections that are being sniped')
     async def list_sections(self, ctx):
         desired_classes = config_loader.load_desired_classes_from_file()
         await ctx.send(f'Desired Sections: {desired_classes}')
     
-    @commands.command()
+    @commands.command(breif='Usage: >create_config. Use before adding any classes to snipe.',
+                      description='Create a config file to set the year, semester, and campus'
+        
+    )
     async def create_config(self,ctx):
         await ctx.send('Enter the year the semester starts (YYYY):')
         
