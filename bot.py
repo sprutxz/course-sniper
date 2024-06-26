@@ -59,7 +59,7 @@ async def remove_section(ctx):
         for index in desired_classes:
             f.write(str(index) + '\n')
     
-    ctx.author.send('Section removed.')
+    await ctx.author.send('Section removed.')
 
 @bot.command()
 async def purge_sections(ctx):
