@@ -1,4 +1,2 @@
 /__pycache__
-/class-index.txt
-/config.txt
-/token.txt
+*.txt
