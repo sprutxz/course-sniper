@@ -1,23 +1,38 @@
+"""
+The main module that runs the discord bot.
+The bot constantly checks for new sections and sends a message to the user if a new section is found.
+It also allows the user to use various commands, which can be found through '>help'.
+"""
+
 import discord
 from discord.ext import commands, tasks
+import asyncio
+
 import config_loader
 import clsretrieval
-import asyncio
 
 # Opening the file that stores the bot token
 with open('token.txt', 'r') as f:
     token = f.read().strip()
     
-with open('user-id.txt', 'r') as f:
+# loading the usr-id to send the message to
+with open('usr-id.txt', 'r') as f:
     USR_ID = int(f.read().strip())
 
+#setting up the intents
 intents = discord.Intents.default()
 intents.message_content = True
 
 class MyBot(commands.Bot):
+    """
+    This is the main class responsible for the functioning of the bot. 
+    It initializes the bot and starts the task to check for new sections every 2 seconds.
+    """
+    
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
     
+    # Logging
     async def on_ready(self):
         print(f'Logged in as {self.user} (ID: {self.user.id})')
         print('------')
@@ -26,22 +41,26 @@ class MyBot(commands.Bot):
         # Start the task to run in the background
         self.check_for_new_sections.start()
     
+    # Open Section checker task that runs every 2 seconds
     @tasks.loop(seconds=2)
     async def check_for_new_sections(self):
-        print('Checking for new sections...')
         
-        params = config_loader.load_config_from_file()
-        semester = params['term'] + params['year']
-        desired_sections = config_loader.load_desired_classes_from_file()
-        open_sections = clsretrieval.get_open_classes()
+        desired_sections = config_loader.load_desired_classes_from_file() #loading the classes to snipe
         
-        indexes = clsretrieval.check_open_classes(open_sections, desired_sections)
+        open_sections = clsretrieval.get_open_classes() # finding the open sections on Rutgers SOC
         
+        indexes = clsretrieval.check_open_classes(open_sections, desired_sections) # checking if the desired sections are open
+        
+        # If new sections are found, send a message to the user
         if indexes:
-            print('New sections found!')
+            print('New open sections found!')
+            
+            params = config_loader.load_config_from_file()
+            semester = params['term'] + params['year']
+            
             for index in indexes:
+                
                 url = f'https://sims.rutgers.edu/webreg/editSchedule.htm?login=cas&semesterSelection={semester}&indexList={index}'
-                print(f'Index: {index}')
                 
                 # Send a message to the user
                 user = await self.fetch_user(USR_ID)
@@ -52,23 +71,34 @@ class MyBot(commands.Bot):
                 with open('class-index.txt', 'w') as f:
                     for index in desired_sections:
                         f.write(str(index) + '\n')
-                
-        print('Done checking for new sections.')
     
+    # wait for bot to initialize before starting the task
     @check_for_new_sections.before_loop
     async def before(self):
         await self.wait_until_ready()
-        
+
 class Commands(commands.Cog):
+    """
+    This class contains the commands that the user can use to interact with the bot.
+    """
     def __init__(self, bot):
         self.bot = bot
-        
-    @commands.command()
+    
+    # Add a section to snipe
+    @commands.command(name='add',
+                      brief='Usage: >add <section>',
+                      description='Add a section to snipe')
+    
     async def add_section(self, ctx, arg):
         with open('class-index.txt', 'a') as f:
             f.write(arg + '\n')
+        
+        await ctx.send(f'Section {arg} has been added to the list')
     
-    @commands.command()
+    # Remove a section to snipe
+    @commands.command(name='remove',
+                      brief='Usage: >remove <section>',
+                      description='Remove a section to snipe')
     async def remove_section(self, ctx, arg):
         desired_classes = config_loader.load_desired_classes_from_file()
         
@@ -78,8 +108,31 @@ class Commands(commands.Cog):
         with open('class-index.txt', 'w') as f:
             for index in desired_classes:
                 f.write(str(index) + '\n')
+        
+        await ctx.send(f'Section {arg} has been removed from the list')
+    
+    # Remove all sections to snipe
+    @commands.command(name='purge',
+                      brief='Usage: >purge',
+                      description='Remove all sections from the sniping list')
+    async def purge_sections(self, ctx):
+        with open('class-index.txt', 'w'):
+            pass
+        
+        await ctx.send('All sections have been removed)')
+        
+    # List all sections that are being sniped
+    @commands.command(name='sniped',
+                      brief='Usage: >sniped',
+                      description='List all sections that are being sniped')
+    async def list_sections(self, ctx):
+        desired_classes = config_loader.load_desired_classes_from_file()
+        await ctx.send(f'Desired Sections: {desired_classes}')
+    
 
+# Creating the bot
 bot = MyBot(command_prefix='>', intents=intents)
+
 # Adding the Cog
 async def main():
     async with bot:
@@ -89,146 +142,3 @@ async def main():
 # Running the bot
 if __name__ == "__main__":
     asyncio.run(main())
-
-
-# info_text = '''
-# Enter the index number of the section you want to track.
-
-# Enter "-1" when finished.
-# '''
-
-# @bot.command()
-# async def add_multiple_sections(ctx):
-#     # Get input from the user
-#     section_indexes = []
-    
-#     await ctx.author.send(info_text)
-    
-#     while True:
-#         index = await bot.wait_for('message', check=lambda message: message.author == ctx.author)
-#         index = index.content
-        
-#         if index != '-1':
-#             section_indexes.append(index)
-        
-#         else: 
-#             ctx.author.send('Finished adding sections.')
-#             break
-        
-#     with open('class-index.txt', 'w') as f:
-#         for index in section_indexes:
-#             f.write(str(index) + '\n')
-            
-# @bot.command()
-# async def add_section(ctx, arg):
-#     with open('class-index.txt', 'a') as f:
-#         f.write(arg + '\n')
-    
-# @bot.command()
-# async def remove_section(ctx):
-#     await ctx.author.send('Enter the index number of the section you want to remove.')
-    
-#     index = await bot.wait_for('message', check=lambda message: message.author == ctx.author)
-#     index = index.content
-    
-#     desired_classes = config.load_desired_classes_from_file()
-    
-#     if index in desired_classes:
-#         desired_classes.remove(index)
-    
-#     with open('class-index.txt', 'w') as f:
-#         for index in desired_classes:
-#             f.write(str(index) + '\n')
-    
-#     await ctx.author.send('Section removed.')
-
-# @bot.command()
-# async def purge_sections(ctx):
-#     with open('class-index.txt', 'w') as f:
-#         f.write('')
-        
-#     await ctx.author.send('All sections removed.')
-    
-# @bot.command()
-# async def show_sections(ctx):
-#     desired_classes = config.load_desired_classes_from_file()
-    
-#     await ctx.author.send('Your desired sections are:')
-    
-#     for index in desired_classes:
-#         await ctx.author.send(index)
-
-# @bot.command()
-# async def create_config(ctx):
-#     # Ask for year
-#     await ctx.author.send('Enter the year:')
-    
-#     msg = await bot.wait_for('message', check=lambda message: message.author == ctx.author)
-    
-#     year = msg.content.strip()
-
-#     # Ask for term
-#     await ctx.author.send('Enter the term (spring, summer, fall, winter):')
-
-#     while True:
-#         msg = await bot.wait_for('message', check=lambda message: message.author == ctx.author)
-        
-#         term = msg.content.strip().lower()
-
-#         if term == 'spring':
-#             term = '1'
-#             break
-#         elif term == 'summer':
-#             term = '7'
-#             break
-#         elif term == 'fall':
-#             term = '9'
-#             break
-#         elif term == 'winter':
-#             term = '0'
-#             break
-#         else:
-#             await ctx.author.send('Invalid term. Please enter a valid term (spring, summer, fall, winter):')
-#             continue
-
-#     # Ask for campus
-#     await ctx.author.send('Enter desired campus (New Brunswick, Newark, Camden):')
-
-#     while True:
-#         msg = await bot.wait_for('message', check=lambda message: message.author == ctx.author)
-        
-#         campus = msg.content.strip().lower()
-
-#         if campus == 'new brunswick':
-#             campus = 'NB'
-#             break
-#         elif campus == 'newark':
-#             campus = 'NK'
-#             break
-#         elif campus == 'camden':
-#             campus = 'CM'
-#             break
-#         else:
-#             await ctx.author.send('Invalid campus. Please enter a valid campus (New Brunswick, Newark, Camden):')
-#             continue
-
-#     # Construct config dictionary
-#     config = {
-#         'year': year,
-#         'term': term,
-#         'campus': campus,
-#     }
-
-#     # Save config to file (optional)
-#     with open('config.txt', 'w') as f:
-#         for key, value in config.items():
-#             f.write(f'{key}:{value}\n')
-
-#     # Send confirmation message to user
-#     await ctx.author.send('Configuration saved successfully.')
-    
-# @bot.command()
-# async def leroysucks(ctx):
-#     await ctx.send('No u.')
-
-# bot.run(token)
