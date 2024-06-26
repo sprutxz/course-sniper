@@ -124,8 +124,9 @@ class Commands(commands.Cog):
     
     # Add a section to snipe
     @commands.command(name='add',
-                      brief='Usage: >add <section>. Use to add a section to the sniping list',
-                      description='Add a section to snipe')
+                      brief='Usage: >add <section>',
+                      description='Add a section to snipe',
+                      )
     
     async def add_section(self, ctx, arg):
         
@@ -151,7 +152,7 @@ class Commands(commands.Cog):
     
     # Remove a section to snipe
     @commands.command(name='remove',
-                      brief='Usage: >remove <section>. Use to remove a section from the sniping list',
+                      brief='Usage: >remove <section>',
                       description='Remove a section to snipe')
     async def remove_section(self, ctx, arg):
         desired_classes = config_loader.load_desired_classes_from_file()
@@ -168,7 +169,7 @@ class Commands(commands.Cog):
     
     # Remove all sections to snipe
     @commands.command(name='purge',
-                      brief='Usage: >purge. Use to remove all sections from the sniping list',
+                      brief='Usage: >purge',
                       description='Remove all sections from the sniping list')
     async def purge_sections(self, ctx):
         desired_classes = config_loader.load_desired_classes_from_file()
@@ -185,7 +186,7 @@ class Commands(commands.Cog):
         
     # List all sections that are being sniped
     @commands.command(name='sniped',
-                      brief='Usage: >sniped. Use to check all sections that are being sniped',
+                      brief='Usage: >sniped',
                       description='List all sections that are being sniped')
     async def list_sections(self, ctx):
         desired_classes = config_loader.load_desired_classes_from_file()
@@ -203,10 +204,16 @@ class Commands(commands.Cog):
         for section in sections:
             await ctx.send(section)
     
-    @commands.command(breif='Usage: >create_config. Use before adding any classes to snipe.',
+    @commands.command(name='create_config',
+                      breif='Usage: >create_config',
                       description='Create a config file to set the year, semester, and campus'
+                      
     )
     async def create_config(self,ctx):
+        if ctx.author.id != 451248085360967681:
+            await ctx.send('You do not have permission to use this command')
+            return
+        
         config = {}
         await ctx.send('Enter the year the semester starts (YYYY):')
         
