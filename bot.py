@@ -7,6 +7,8 @@ It also allows the user to use various commands, which can be found through '>he
 import discord
 from discord.ext import commands, tasks
 import asyncio
+from aiofiles import open as aio_open
+import json
 
 import config_loader
 import clsretrieval
@@ -14,10 +16,7 @@ import clsretrieval
 # Opening the file that stores the bot token
 with open('token.txt', 'r') as f:
     token = f.read().strip()
-    
-# loading the usr-id to send the message to
-with open('usr-id.txt', 'r') as f:
-    USR_ID = int(f.read().strip())
+
 
 #setting up the intents
 intents = discord.Intents.default()
@@ -31,6 +30,7 @@ class MyBot(commands.Bot):
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.file_lock = asyncio.Lock() 
     
     # Logging
     async def on_ready(self):
@@ -46,32 +46,69 @@ class MyBot(commands.Bot):
     async def check_for_new_sections(self):
         print('Checking for new sections...')
         
-        desired_sections = config_loader.load_desired_classes_from_file() #loading the classes to snipe
+        user_data = config_loader.load_desired_classes_from_file() #loading the classes to snipe
         
         open_sections = clsretrieval.get_open_classes() # finding the open sections on Rutgers SOC
         
-        indexes = clsretrieval.check_open_classes(open_sections, desired_sections) # checking if the desired sections are open
+        tasks = []
         
-        # If new sections are found, send a message to the user
+        print('adding tasks...')
+        for user in user_data['users']:
+            
+            task = asyncio.create_task(self.check_open_sections_and_notify(user, open_sections))
+            
+            tasks.append(task)
+        
+        await asyncio.gather(*tasks)
+        
+    # Helper method
+    async def check_open_sections_and_notify(self, user, open_sections):
+        """Check if the desired sections are open and notify the user"""
+        
+        
+        user_id = user['usr_id']
+        desired_sections = user['desired_sections']
+        
+        print(f'Checking for user {user_id}...')
+        
+        indexes = clsretrieval.check_open_classes(open_sections, desired_sections)
+        
         if indexes:
-            print('New open sections found!')
+            print(f'New open sections found for user {user_id}!')
             
             params = config_loader.load_config_from_file()
             semester = params['term'] + params['year']
             
             for index in indexes:
-                
                 url = f'https://sims.rutgers.edu/webreg/editSchedule.htm?login=cas&semesterSelection={semester}&indexList={index}'
                 
                 # Send a message to the user
-                user = await self.fetch_user(USR_ID)
+                user = await self.fetch_user(user_id)
                 await user.send(f'Open Section: {index} \nRegistration url: {url}')
                 
                 # Remove the section from the text file
-                desired_sections.remove(index)
-                with open('class-index.txt', 'w') as f:
-                    for index in desired_sections:
-                        f.write(str(index) + '\n')
+                await self.remove_section(user_id, index)         
+        else:
+            print(f'No new open sections found for user {user_id}.')
+    
+    # Helper method
+    async def remove_section(self, user_id, section):
+        """Remove the section from the text file"""
+        
+        async with self.file_lock:
+            # Load data from file
+            with open('class-index.json', 'r') as f:
+                user_data = json.load(f)
+            
+            # Find the user and remove the section
+            for user in user_data['users']:
+                if user['usr_id'] == user_id:
+                    user['desired_sections'].remove(section)
+                    break
+            
+            # Write updated data back to file
+            async with aio_open('class-index.json', 'w') as f:
+                await f.write(json.dumps(user_data, indent=4))
     
     # wait for bot to initialize before starting the task
     @check_for_new_sections.before_loop
@@ -91,8 +128,24 @@ class Commands(commands.Cog):
                       description='Add a section to snipe')
     
     async def add_section(self, ctx, arg):
-        with open('class-index.txt', 'a') as f:
-            f.write(arg + '\n')
+        
+        desired_classes = config_loader.load_desired_classes_from_file()
+        
+        existing_user = False
+        for usr in desired_classes['users']:
+            if usr['usr_id'] == ctx.author.id:
+                usr['desired_sections'].append(arg)
+                existing_user = True
+                break
+        
+        if not existing_user:
+            desired_classes['users'].append({
+                'usr_id': ctx.author.id,
+                'desired_sections': [arg]
+            })
+            
+        with open('class-index.json', 'w') as f:
+            json.dump(desired_classes, f, indent=4)
         
         await ctx.send(f'Section {arg} has been added to the list')
     
@@ -103,12 +156,13 @@ class Commands(commands.Cog):
     async def remove_section(self, ctx, arg):
         desired_classes = config_loader.load_desired_classes_from_file()
         
-        if arg in desired_classes:
-            desired_classes.remove(arg)
-        
-        with open('class-index.txt', 'w') as f:
-            for index in desired_classes:
-                f.write(str(index) + '\n')
+        for usr in desired_classes['users']:
+            if usr['usr_id'] == ctx.author.id:
+                usr['desired_sections'].remove(arg)
+                break
+            
+        with open('class-index.json', 'w') as f:
+            json.dump(desired_classes, f, indent=4)
         
         await ctx.send(f'Section {arg} has been removed from the list')
     
@@ -117,8 +171,15 @@ class Commands(commands.Cog):
                       brief='Usage: >purge. Use to remove all sections from the sniping list',
                       description='Remove all sections from the sniping list')
     async def purge_sections(self, ctx):
-        with open('class-index.txt', 'w'):
-            pass
+        desired_classes = config_loader.load_desired_classes_from_file()
+        
+        for usr in desired_classes['users']:
+            if usr['usr_id'] == ctx.author.id:
+                usr['desired_sections'] = []
+                break
+            
+        with open('class-index.json', 'w') as f:
+            json.dump(desired_classes, f, indent=4)
         
         await ctx.send('All sections have been removed)')
         
@@ -128,13 +189,25 @@ class Commands(commands.Cog):
                       description='List all sections that are being sniped')
     async def list_sections(self, ctx):
         desired_classes = config_loader.load_desired_classes_from_file()
-        await ctx.send(f'Desired Sections: {desired_classes}')
+        
+        for usr in desired_classes['users']:
+            if usr['usr_id'] == ctx.author.id:
+                sections = usr['desired_sections']
+                break
+            
+        if not sections:
+            await ctx.send('No sections are being sniped')
+            return
+        
+        await ctx.send('Sections being sniped:')
+        for section in sections:
+            await ctx.send(section)
     
     @commands.command(breif='Usage: >create_config. Use before adding any classes to snipe.',
                       description='Create a config file to set the year, semester, and campus'
-        
     )
     async def create_config(self,ctx):
+        config = {}
         await ctx.send('Enter the year the semester starts (YYYY):')
         
         def check(m):
@@ -189,11 +262,13 @@ class Commands(commands.Cog):
                 await ctx.send('Invalid campus')
                 continue
             
+        config['year'] = year.content
+        config['term'] = semester
+        config['campus'] = campus
         
-        with open('config.txt', 'w') as f:
-            f.write(f'year:{year.content}\n')
-            f.write(f'term:{semester}\n')
-            f.write(f'campus:{campus}\n')
+        with open('config.json', 'w') as f:
+            json.dump(config, f)
+            
             
         await ctx.send('Config file created')    
 
