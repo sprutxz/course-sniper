@@ -13,6 +13,8 @@ USR_ID = 451248085360967681
 intents = discord.Intents.default()
 intents.message_content = True
 
+
+
 class MyBot(commands.Bot):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -28,6 +30,9 @@ class MyBot(commands.Bot):
     @tasks.loop(seconds=2)
     async def check_for_new_sections(self):
         print('Checking for new sections...')
+        
+        params = config.load_config_from_file()
+        semester = params['term'] + params['year']
         desired_sections = config.load_desired_classes_from_file()
         open_sections = clsretrieval.get_open_classes()
         
@@ -36,11 +41,12 @@ class MyBot(commands.Bot):
         if indexes:
             print('New sections found!')
             for index in indexes:
+                url = f'https://sims.rutgers.edu/webreg/editSchedule.htm?login=cas&semesterSelection={semester}&indexList={index}'
                 print(f'Index: {index}')
                 
                 # Send a message to the user
                 user = await self.fetch_user(USR_ID)
-                await user.send(f'New section found: {index}')
+                await user.send(f'Open Section: {index} \n url: {url}')
                 
                 # Remove the section from the text file
                 desired_sections.remove(index)
