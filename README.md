@@ -1,3 +1,5 @@
+### Overview
+
 Course-Sniper is a discord bot developed in python to snipe courses for Rutgers. It checks for open sections every 2 seconds (Because 1 second was too fast for the API) and notifies the user about an open section with the link the register for the class.
 
 `config_loader.py` contains some helper methods to load various information
@@ -13,8 +15,14 @@ The dependencies managed in `pyproject.toml` can be installed through poetry by 
 
 Use a virtual environment to prevent polluting the global environment with necessary packages causing conflicts.
 
+Create a file in the same folder as the `bot.py` file called 'token.txt' containing the bot api token.
+Create a file in the same folder as the `bot.py` file called 'usr-id.txt' containing the user-id of the discord user to send the message to
+
 #### Run
 
-To run the course-sniper, invite the bot to a discord server through this [invite link](https://discord.com/oauth2/authorize?client_id=1255239764005748826&permissions=124928&integration_type=0&scope=bot) and then create a private dm with the bot (I do not know how to create a private DM without inviting the bot to the server first).
+To run the course-sniper, invite the bot you created to a discord server through and then create a private DM with the bot (I do not know how to create a private DM without inviting the bot to the server first).
 
 After activating the virtual environment where the dependencies are downloaded, run the `bot.py` file using `$ python3 bot.py` in the command line
+
+Make sure to use the command `>help` to understand how the bot commands work.
+Use `>create_config` before adding any sections to snipe.
