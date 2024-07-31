@@ -278,7 +278,7 @@ class Commands(commands.Cog):
         await ctx.send('Config file created')    
 
 # Creating the bot
-bot = MyBot(command_prefix='>', intents=intents)
+bot = MyBot(command_prefix='!', intents=intents)
 
 # Adding the Cog
 async def main():
