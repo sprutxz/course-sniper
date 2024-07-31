@@ -13,9 +13,11 @@ import json
 import config_loader
 import clsretrieval
 
-# Opening the file that stores the bot token
-with open('token.txt', 'r') as f:
-    token = f.read().strip()
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+token = os.getenv("DISCORD_TOKEN")
 
 
 #setting up the intents
