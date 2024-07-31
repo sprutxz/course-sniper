@@ -9,6 +9,7 @@ from discord.ext import commands, tasks
 import asyncio
 from aiofiles import open as aio_open
 import json
+import signal
 
 import config_loader
 import clsretrieval
@@ -286,6 +287,11 @@ async def main():
         await bot.add_cog(Commands(bot))
         await bot.start(token)
 
+def shutdown(signal, frame):
+    print("Shutting down...")
+    asyncio.get_event_loop().stop()
+
 # Running the bot
 if __name__ == "__main__":
+    signal.signal(signal.SIGINT, shutdown)
     asyncio.run(main())
