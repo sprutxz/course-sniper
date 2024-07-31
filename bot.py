@@ -85,9 +85,7 @@ class MyBot(commands.Bot):
                 await user.send(f'Open Section: {index} \nRegistration url: {url}')
                 
                 # Remove the section from the text file
-                await self.remove_section(user_id, index)         
-        else:
-            print(f'No new open sections found for user {user_id}.')
+                await self.remove_section(user_id, index)
     
     # Helper method
     async def remove_section(self, user_id, section):
