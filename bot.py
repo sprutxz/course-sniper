@@ -58,7 +58,7 @@ class MyBot(commands.Bot):
     # Open Section checker task that runs every 2 seconds
     @tasks.loop(seconds=2)
     async def check_for_new_sections(self):
-        print('Checking for new sections...')
+        # print('Checking for new sections...')
         
         open_sections = clsretrieval.get_open_classes(self.params) # finding the open sections on Rutgers SOC
         
