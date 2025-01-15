@@ -22,8 +22,11 @@ def load_desired_classes_from_file(file='class-index.json'):
     if not os.path.exists(file):
         return None
     
+    if os.path.getsize(file) == 0:
+        print(f"File {file} is empty")
+        return None
+    
     with open(file, 'r') as f:
         desired_classes = json.load(f)
         
     return desired_classes
-

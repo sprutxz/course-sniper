@@ -16,7 +16,7 @@ The dependencies managed in `pyproject.toml` can be installed through poetry by 
 
 Use a virtual environment to prevent polluting the global environment with necessary packages causing conflicts.
 
-Create a file in the same folder as the `bot.py` file called 'token.txt' containing the bot api token.
+Crete a .env file that stores the bot api token.
 
 #### Run
 

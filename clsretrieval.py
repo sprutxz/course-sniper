@@ -7,14 +7,14 @@ import asyncio
 
 import config_loader
 
-def get_open_classes():
+def get_open_classes(params):
     """Retrieve the open classes from the SOC API"""
     
-    params = config_loader.load_config_from_file() # loading the parameters to send to the SOC API
+    #params = config_loader.load_config_from_file() # loading the parameters to send to the SOC API
     
-    if params is None:
-        print("No parameters found in config.txt")
-        return []
+    # if params is None:
+    #     print("No parameters found in config.txt")
+    #     return None
     
     url = "http://sis.rutgers.edu/soc/api/openSections.gzip" # SOC API URL
     

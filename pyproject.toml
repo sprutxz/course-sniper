@@ -1,18 +1,13 @@
-[tool.poetry]
+[project]
 name = "course-sniper"
 version = "0.1.0"
-description = ""
-authors = ["Leroy <leroy.souz@gmail.com>"]
+description = "Add your description here"
 readme = "README.md"
-
-[tool.poetry.dependencies]
-python = "^3.10"
-requests = "^2.32.3"
-discord = "^2.3.2"
-apscheduler = "^3.10.4"
-aiofiles = "^24.1.0"
-
-
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires-python = ">=3.10"
+dependencies = [
+    "aiofiles>=24.1.0",
+    "apscheduler>=3.11.0",
+    "discord>=2.3.2",
+    "python-dotenv>=1.0.1",
+    "requests>=2.32.3",
+]

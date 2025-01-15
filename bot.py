@@ -33,14 +33,25 @@ class MyBot(commands.Bot):
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.file_lock = asyncio.Lock() 
-    
-    # Logging
+        self.file_lock = asyncio.Lock()
+        self.params = None
+
     async def on_ready(self):
         print(f'Logged in as {self.user} (ID: {self.user.id})')
         print('------')
+
+    async def wait_for_params(self):
+        while True:
+            self.params = config_loader.load_config_from_file()
+            if self.params is not None:
+                print("Parameters loaded successfully!")
+                return
+            print("Waiting for parameter file to be created...")
+            await asyncio.sleep(5)
         
     async def setup_hook(self) -> None:
+        # Wait for params before starting the task
+        await self.wait_for_params()
         # Start the task to run in the background
         self.check_for_new_sections.start()
     
@@ -49,10 +60,18 @@ class MyBot(commands.Bot):
     async def check_for_new_sections(self):
         print('Checking for new sections...')
         
+        open_sections = clsretrieval.get_open_classes(self.params) # finding the open sections on Rutgers SOC
+        
+        if open_sections is None:
+            print('Error retrieving open classes')
+            return
+        
         user_data = config_loader.load_desired_classes_from_file() #loading the classes to snipe
         
-        open_sections = clsretrieval.get_open_classes() # finding the open sections on Rutgers SOC
-        
+        if user_data is None:
+            print('No classes to snipe')
+            return
+    
         tasks = []
         
         for user in user_data['users']:
@@ -130,6 +149,11 @@ class Commands(commands.Cog):
     async def add_section(self, ctx, arg):
         
         desired_classes = config_loader.load_desired_classes_from_file()
+        
+        if desired_classes is None:
+            desired_classes = {
+                'users': []
+            }
         
         existing_user = False
         for usr in desired_classes['users']:
@@ -279,7 +303,7 @@ class Commands(commands.Cog):
         await ctx.send('Config file created')    
 
 # Creating the bot
-bot = MyBot(command_prefix='!', intents=intents)
+bot = MyBot(command_prefix='>', intents=intents)
 
 # Adding the Cog
 async def main():
